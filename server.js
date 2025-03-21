@@ -31,26 +31,24 @@ async function saveSOSData() {
 }
 
 app.post("/sos", async (req, res) => {
-    const newSOS = req.body;
+    const newSOS = {
+        user_id: req.body.user_id,
+        lat: req.body.lat,
+        lon: req.body.lon,
+        timestamp: new Date().toISOString() 
+    };
 
-    const existingIndex = sosList.findIndex(entry => entry.user_id === newSOS.user_id);
-    if (existingIndex !== -1) {
-        sosList[existingIndex].lat = newSOS.lat;
-        sosList[existingIndex].lon = newSOS.lon;
-    } else {
-        sosList.push(newSOS);
-    }
+    sosList.push(newSOS);
+    await saveSOSData();
 
-    await saveSOSData(); 
-    res.json({ message: "SOS received" });
+    res.json({ message: "SOS received", data: newSOS });
 });
 
 app.get("/get_sos", (req, res) => {
     res.json(sosList);
 });
 
-// Start server and load SOS data
 app.listen(PORT, "0.0.0.0", async () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    await loadSOSData(); 
+    await loadSOSData();
 });
