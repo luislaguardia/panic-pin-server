@@ -1,30 +1,37 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
+const fs = require("fs").promises;
+const path = require("path");
 
 const app = express();
 const PORT = 5001;
-const SOS_FILE = "sos_data.json";
+const SOS_FILE = path.join(__dirname, "sos_data.json");
 
-app.use(express.json()); 
-app.use(cors()); 
+app.use(express.json());
+app.use(cors());
 
-function loadSOSData() {
+let sosList = [];
+
+async function loadSOSData() {
     try {
-        const data = fs.readFileSync(SOS_FILE, "utf8");
-        return JSON.parse(data);
+        const data = await fs.readFile(SOS_FILE, "utf8");
+        sosList = JSON.parse(data);
     } catch (error) {
-        return []; 
+        console.log("No existing SOS data found, starting fresh.");
+        sosList = [];
     }
 }
 
-function saveSOSData(data) {
-    fs.writeFileSync(SOS_FILE, JSON.stringify(data, null, 4));
+async function saveSOSData() {
+    try {
+        await fs.writeFile(SOS_FILE, JSON.stringify(sosList, null, 4));
+    } catch (error) {
+        console.error("Error saving SOS data:", error);
+    }
 }
 
-app.post("/sos", (req, res) => {
+app.post("/sos", async (req, res) => {
     const newSOS = req.body;
-    let sosList = loadSOSData();
 
     const existingIndex = sosList.findIndex(entry => entry.user_id === newSOS.user_id);
     if (existingIndex !== -1) {
@@ -34,14 +41,16 @@ app.post("/sos", (req, res) => {
         sosList.push(newSOS);
     }
 
-    saveSOSData(sosList);
+    await saveSOSData(); 
     res.json({ message: "SOS received" });
 });
 
 app.get("/get_sos", (req, res) => {
-    res.json(loadSOSData());
+    res.json(sosList);
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+// Start server and load SOS data
+app.listen(PORT, "0.0.0.0", async () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    await loadSOSData(); 
 });
