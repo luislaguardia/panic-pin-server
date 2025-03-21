@@ -49,6 +49,6 @@ app.get("/get_sos", (req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", async () => {
-    console.log(Server running on http://localhost:${PORT});
+    console.log(`Server running on http://localhost:${PORT}`);
     await loadSOSData();
 });
