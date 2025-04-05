@@ -3,6 +3,8 @@ const cors = require("cors");
 const fs = require("fs").promises;
 const path = require("path");
 
+// new added clear data function in line 41
+
 const app = express();
 const PORT = 5001;
 const SOS_FILE = path.join(__dirname, "sos_data.json");
@@ -30,12 +32,21 @@ async function saveSOSData() {
     }
 }
 
+async function clearSOSData() {
+    sosList = [];
+    await saveSOSData();
+    console.log("SOS data cleared at", new Date().toLocaleString());
+}
+
+// clear data functionnnnn
+setInterval(clearSOSData, 1800000);
+
 app.post("/sos", async (req, res) => {
     const newSOS = {
         user_id: req.body.user_id,
         lat: req.body.lat,
         lon: req.body.lon,
-        timestamp: new Date().toISOString() 
+        timestamp: new Date().toISOString()
     };
 
     sosList.push(newSOS);
